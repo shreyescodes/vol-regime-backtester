@@ -1,6 +1,10 @@
 # QuantVol Framework
 **Adaptive Regime-Aware Systematic Backtesting Engine**
 
+[![Build Status](https://github.com/shreyescodes/vol-regime-backtester/actions/workflows/ci.yml/badge.svg)](https://github.com/shreyescodes/vol-regime-backtester/actions)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 ![QuantVol Web Dashboard Demo](QuantVol.png)
 > *Interactive Streamlit web dashboard for dynamic, regime-aware backtesting.*
 
@@ -25,7 +29,7 @@ The core logic dynamically adjusts position sizing based on real-time market vol
 
 ## Project Structure
 ```text
-QP/
+vol-regime-backtester/
 │-- backtester.py      # Core execution engine with frictional costs
 │-- strategies.py      # Base class and strategy implementations (MA Crossover, Vol Target)
 │-- utils.py           # Helpers for data loading, regime detection, and performance metrics
