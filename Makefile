@@ -1,35 +1,40 @@
-.PHONY: setup test run web docker-build docker-run clean
+.PHONY: install lint format typecheck test check run run-synthetic dashboard docker clean
 
-# Variables
-PYTHON = python
-DOCKER_IMAGE = quantvol-backtester
+PY ?= python
 
-setup:
-	@echo "Installing dependencies..."
-	pip install -r requirements.txt
-	pip install -r requirements-dev.txt
+install:
+	$(PY) -m pip install -e ".[dev,app,data]"
+	pre-commit install
+
+lint:
+	ruff check .
+	ruff format --check .
+
+format:
+	ruff check . --fix
+	ruff format .
+
+typecheck:
+	mypy
 
 test:
-	@echo "Running unit tests..."
-	$(PYTHON) -m unittest discover tests/
+	pytest --cov --cov-report=term-missing
+
+check: lint typecheck test
 
 run:
-	@echo "Running backend simulation..."
-	$(PYTHON) run_backtest.py
+	quantvol run --config configs/spy.yaml --out reports/spy
 
-web:
-	@echo "Starting Streamlit dashboard..."
-	$(PYTHON) -m streamlit run app.py
+run-synthetic:
+	quantvol run --config configs/default.yaml --out reports/synthetic
 
-docker-build:
-	@echo "Building Docker image..."
-	docker build -t $(DOCKER_IMAGE) .
+dashboard:
+	quantvol dashboard
 
-docker-run:
-	@echo "Running Docker container..."
-	docker run --rm -v $(PWD):/app $(DOCKER_IMAGE)
+docker:
+	docker build -t quantvol .
+	docker run --rm -v "$(CURDIR)/reports:/home/quant/reports" quantvol
 
 clean:
-	@echo "Cleaning cache files..."
-	find . -type d -name "__pycache__" -exec rm -rf {} +
-	find . -type f -name "*.pyc" -delete
+	rm -rf reports .coverage coverage.xml htmlcov .mypy_cache .ruff_cache .pytest_cache build dist
+	find . -type d -name __pycache__ -prune -exec rm -rf {} +
