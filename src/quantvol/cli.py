@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import logging
 import subprocess
 import sys
@@ -15,6 +16,7 @@ from quantvol import __version__
 from quantvol.config import Config, ConfigError, load_config
 from quantvol.data import DataError
 from quantvol.pipeline import PipelineResult, run_pipeline, write_report
+from quantvol.resources import resolve_config_path
 
 PERCENT_COLS = {"Total Return", "CAGR", "Max Drawdown", "Annual Volatility", "VaR 95%", "CVaR 95%"}
 PERCENT_COLS |= {"Win Rate", "Exposure"}
@@ -51,7 +53,7 @@ def _print_run(res: PipelineResult) -> None:
 
 
 def _load(args: argparse.Namespace) -> Config:
-    return load_config(args.config) if args.config else Config()
+    return load_config(resolve_config_path(args.config)) if args.config else Config()
 
 
 def _cmd_run(args: argparse.Namespace) -> int:
@@ -83,10 +85,10 @@ def _cmd_walkforward(args: argparse.Namespace) -> int:
 
 
 def _cmd_dashboard(args: argparse.Namespace) -> int:
-    script = Path(__file__).resolve().parents[2] / "app" / "dashboard.py"
-    if not script.exists():
-        print("dashboard.py not found; run from a source checkout.", file=sys.stderr)
+    if importlib.util.find_spec("streamlit") is None:
+        print("streamlit is not installed; run `pip install quantvol[app]`.", file=sys.stderr)
         return 1
+    script = Path(__file__).resolve().parent / "dashboard.py"
     return subprocess.call([sys.executable, "-m", "streamlit", "run", str(script)])
 
 
@@ -96,7 +98,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     def common(p: argparse.ArgumentParser) -> None:
-        p.add_argument("-c", "--config", help="YAML config file (defaults are used if omitted)")
+        p.add_argument(
+            "-c",
+            "--config",
+            help="YAML file, or a bundled name: spy, default (built-in defaults if omitted)",
+        )
 
     run = sub.add_parser("run", help="full backtest, stress tests, attribution and report")
     common(run)

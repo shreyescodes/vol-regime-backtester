@@ -14,8 +14,6 @@ RUN useradd --create-home --uid 1000 quant
 WORKDIR /home/quant
 COPY --from=builder /dist/*.whl /tmp/
 RUN pip install --no-cache-dir /tmp/*.whl && rm /tmp/*.whl
-COPY --chown=quant:quant configs ./configs
-COPY --chown=quant:quant data/sample ./data/sample
 USER quant
 ENTRYPOINT ["quantvol"]
-CMD ["run", "--config", "configs/spy.yaml", "--out", "reports"]
+CMD ["run", "--config", "spy", "--out", "reports"]

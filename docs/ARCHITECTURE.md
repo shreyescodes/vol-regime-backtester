@@ -22,7 +22,7 @@ flowchart LR
     WF --> REP
     REP --> OUT[(CSV / JSON / PNG)]
     PIPE --> CLI[cli.py]
-    PIPE --> DASH[app/dashboard.py]
+    PIPE --> DASH[dashboard.py]
 ```
 
 ## Module responsibilities
@@ -40,6 +40,8 @@ flowchart LR
 | `reporting.py` | Figures (headless Matplotlib) | `plot_*` |
 | `pipeline.py` | Orchestrates a full run, writes the report | `run_pipeline` |
 | `cli.py` | `quantvol run / sweep / walkforward / dashboard` | `main` |
+| `dashboard.py` | Streamlit UI, launched by `quantvol dashboard` | |
+| `resources.py` + `assets/` | Example configs and the SPY sample, shipped in the wheel | `resource_path` |
 
 ## Design decisions
 

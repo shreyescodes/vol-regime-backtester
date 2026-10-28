@@ -1,7 +1,7 @@
-# SPY daily bars 2005-2024 (split/dividend adjusted, via Yahoo Finance; bundled for offline use).
+# SPY daily bars 2005-2024 (split/dividend adjusted, via Yahoo Finance; bundled with the package).
 data:
   source: csv
-  csv_path: data/sample/spy_2005_2024.csv
+  csv_path: "builtin:spy_2005_2024.csv"
 
 regime:
   vol_window: 20

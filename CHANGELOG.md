@@ -9,8 +9,8 @@ All notable changes to this project are documented here. The format follows
 ### Added
 - Installable `quantvol` package (`src/` layout) with a `quantvol` CLI: `run`, `sweep`,
   `walkforward`, `dashboard`.
-- Validated, frozen YAML configuration with clear error messages (`configs/spy.yaml`,
-  `configs/default.yaml`).
+- Validated, frozen YAML configuration with clear error messages (`spy`, `default`),
+  bundled in the package and selectable by name: `quantvol run --config spy`.
 - Real-data support: bundled SPY 2005-2024 sample, standardizing CSV/Excel loader, and an
   optional Yahoo Finance loader with an on-disk cache.
 - Metrics: Sortino, annual volatility, historical VaR/CVaR, win rate, exposure, turnover.
@@ -20,11 +20,14 @@ All notable changes to this project are documented here. The format follows
   walk-forward figures.
 - Streamlit dashboard rebuilt on the package API with Overview, Equity, Regimes, Stress tests and
   Robustness tabs.
-- Test suite of 59 pytest and Hypothesis tests (95% coverage), including look-ahead and
-  walk-forward leakage checks.
+- Test suite of 64 pytest, Hypothesis and Streamlit `AppTest` tests (96% coverage), including
+  look-ahead and walk-forward leakage checks and end-to-end dashboard runs.
 - CI on Python 3.10-3.12 with ruff, mypy (strict), coverage, wheel build and Docker build;
   multi-stage non-root Dockerfile; pre-commit hooks.
 - `docs/METHODOLOGY.md` and `docs/ARCHITECTURE.md`.
+- The dashboard, example configs and SPY sample ship inside the wheel, so `quantvol dashboard`
+  and `--config spy` work after a normal `pip install`.
+- GitHub pull request and issue templates, `SECURITY.md`, `CODEOWNERS` and Dependabot.
 
 ### Changed
 - `Backtester` and all config sections are immutable dataclasses; results are returned as a typed

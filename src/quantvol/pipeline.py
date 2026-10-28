@@ -15,6 +15,7 @@ from quantvol.data import generate_synthetic_data, load_csv_data
 from quantvol.engine import Backtester, BacktestResult
 from quantvol.metrics import regime_attribution
 from quantvol.regimes import detect_regimes, transition_matrix
+from quantvol.resources import resolve_data_path
 from quantvol.strategies import (
     RegimeFilteredMovingAverageCrossover,
     VolatilityTargetingStrategy,
@@ -45,7 +46,7 @@ def load_market_data(cfg: DataConfig, trading_days: int = 252) -> pd.DataFrame:
     """Resolve the configured data source into a standardized OHLCV frame."""
     if cfg.source == "csv":
         assert cfg.csv_path is not None
-        return load_csv_data(cfg.csv_path)
+        return load_csv_data(resolve_data_path(cfg.csv_path))
     if cfg.source == "yahoo":
         from quantvol.data.yahoo import fetch_yahoo
 

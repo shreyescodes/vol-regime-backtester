@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pathlib import Path
+from dataclasses import dataclass
 
 import altair as alt
 import pandas as pd
@@ -22,9 +22,9 @@ from quantvol.config import (
 )
 from quantvol.data import DataError, load_csv_data
 from quantvol.pipeline import BENCHMARK, PipelineResult, run_pipeline
+from quantvol.resources import resource_path
 
-ROOT = Path(__file__).resolve().parents[1]
-SAMPLE = ROOT / "data" / "sample" / "spy_2005_2024.csv"
+SAMPLE = resource_path("spy_2005_2024.csv")
 TEMPLATE = "Date,Open,High,Low,Close,Volume\n2020-01-02,100,101,99,100.5,1000000\n"
 
 st.set_page_config(page_title="QuantVol", page_icon=":chart_with_upwards_trend:", layout="wide")
@@ -35,21 +35,37 @@ def cached_run(cfg: Config, data: pd.DataFrame) -> PipelineResult:
     return run_pipeline(cfg, data)
 
 
+@dataclass(frozen=True)
+class Defaults:
+    low: float
+    high: float
+    commission: float
+    slippage: float
+    slow: int
+
+
+EQUITY_DEFAULTS = Defaults(low=0.10, high=0.20, commission=0.0002, slippage=0.0003, slow=100)
+SYNTHETIC_DEFAULTS = Defaults(low=0.14, high=0.25, commission=0.0010, slippage=0.0005, slow=50)
+
+
 def sidebar() -> tuple[Config, pd.DataFrame | None]:
     st.sidebar.title("QuantVol")
-    source = st.sidebar.radio(
-        "Market data", ["SPY 2005-2024 (bundled)", "Synthetic regime-switching", "Upload CSV"]
+    source = (
+        st.sidebar.radio(
+            "Market data", ["SPY 2005-2024 (bundled)", "Synthetic regime-switching", "Upload CSV"]
+        )
+        or "SPY"
     )
     data: pd.DataFrame | None = None
     data_cfg = DataConfig()
-    defaults = {"low": 0.10, "high": 0.20, "cost": (0.0002, 0.0003), "slow": 100}
+    defaults = EQUITY_DEFAULTS
     if source.startswith("SPY"):
         data = load_csv_data(SAMPLE)
     elif source.startswith("Synthetic"):
         n_days = st.sidebar.slider("Trading days", 500, 4000, 1500, step=100)
         seed = st.sidebar.number_input("Random seed", value=101, step=1)
         data_cfg = DataConfig(n_days=n_days, seed=int(seed))
-        defaults = {"low": 0.14, "high": 0.25, "cost": (0.0010, 0.0005), "slow": 50}
+        defaults = SYNTHETIC_DEFAULTS
     else:
         st.sidebar.download_button("CSV template", TEMPLATE, "quantvol_template.csv", "text/csv")
         upload = st.sidebar.file_uploader("Daily OHLC(V) file", type=["csv", "xlsx"])
@@ -65,20 +81,20 @@ def sidebar() -> tuple[Config, pd.DataFrame | None]:
     with st.sidebar.expander("Execution costs", expanded=False):
         capital = st.number_input("Initial capital ($)", value=100_000.0, step=10_000.0)
         commission = st.number_input(
-            "Commission (per unit turnover)", value=defaults["cost"][0], format="%.4f"
+            "Commission (per unit turnover)", value=defaults.commission, format="%.4f"
         )
         slippage = st.number_input(
-            "Slippage (per unit turnover)", value=defaults["cost"][1], format="%.4f"
+            "Slippage (per unit turnover)", value=defaults.slippage, format="%.4f"
         )
         rf = st.number_input("Risk-free rate", value=0.02, format="%.3f")
         days = st.number_input("Trading days / year", value=252, step=1)
     with st.sidebar.expander("Regime detection", expanded=False):
         window = st.slider("Realized-vol window", 5, 100, 20)
-        low = st.slider("Low / medium threshold", 0.03, 0.40, defaults["low"], 0.01)
-        high = st.slider("Medium / high threshold", 0.08, 0.80, defaults["high"], 0.01)
+        low = st.slider("Low / medium threshold", 0.03, 0.40, defaults.low, 0.01)
+        high = st.slider("Medium / high threshold", 0.08, 0.80, defaults.high, 0.01)
     with st.sidebar.expander("Strategies", expanded=True):
         fast = st.slider("Crossover fast MA", 5, 60, 20)
-        slow = st.slider("Crossover slow MA", 30, 250, defaults["slow"])
+        slow = st.slider("Crossover slow MA", 30, 250, defaults.slow)
         target = st.slider("Volatility target (annual)", 0.05, 0.40, 0.10, 0.01)
     with st.sidebar.expander("Stress scenarios", expanded=False):
         spike = st.slider("Vol-spike multiplier", 1.1, 3.0, 1.5, 0.1)
@@ -179,7 +195,10 @@ def main() -> None:
         else:
             first = next(iter(res.results.values()))
             st.pyplot(reporting.plot_walkforward(res.walk_forward, first.benchmark_returns))
-            st.dataframe(res.walk_forward.folds.round(3), use_container_width=True)
+            folds = res.walk_forward.folds.copy()
+            for col in ("Train Start", "Test Start", "Test End"):
+                folds[col] = folds[col].dt.strftime("%Y-%m-%d")
+            st.dataframe(folds.round(3), use_container_width=True)
 
 
 main()

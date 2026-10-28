@@ -61,7 +61,7 @@ def main() -> None:
     IMAGES.mkdir(parents=True, exist_ok=True)
     py = sys.executable
 
-    for name, cfg in (("spy", "configs/spy.yaml"),):
+    for name, cfg in (("spy", "spy"),):
         out = ROOT / "reports" / name
         text = run([py, "-m", "quantvol.cli", "run", "-c", cfg, "-o", str(out)])
         (out / "cli_output.txt").write_text(text, encoding="utf-8")
@@ -77,9 +77,7 @@ def main() -> None:
                 (IMAGES / f"{name}_{fig}.png").write_bytes(src.read_bytes())
         if name == "spy":
             head = text.split("Regime attribution")[0].rstrip()
-            render_terminal(
-                head, "$ quantvol run --config configs/spy.yaml", IMAGES / "cli_run.png"
-            )
+            render_terminal(head, "$ quantvol run --config spy", IMAGES / "cli_run.png")
 
     tests = run([py, "-m", "pytest", "-q", "--cov", "--color=no", "-p", "no:cacheprovider"])
     keep = [ln for ln in tests.splitlines() if ln.strip() and not ln.startswith("Required")]

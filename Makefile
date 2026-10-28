@@ -23,10 +23,10 @@ test:
 check: lint typecheck test
 
 run:
-	quantvol run --config configs/spy.yaml --out reports/spy
+	quantvol run --config spy --out reports/spy
 
 run-synthetic:
-	quantvol run --config configs/default.yaml --out reports/synthetic
+	quantvol run --config default --out reports/synthetic
 
 dashboard:
 	quantvol dashboard

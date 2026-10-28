@@ -16,6 +16,7 @@ from playwright.sync_api import sync_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 IMAGES = ROOT / "docs" / "images"
+DASHBOARD = ROOT / "src" / "quantvol" / "dashboard.py"
 TABS = ["Overview", "Equity & drawdown", "Regimes", "Stress tests", "Robustness"]
 SLUGS = ["overview", "equity", "regimes", "stress", "robustness"]
 
@@ -30,7 +31,7 @@ def main() -> None:
     port = free_port()
     server = subprocess.Popen(
         [
-            sys.executable, "-m", "streamlit", "run", str(ROOT / "app" / "dashboard.py"),
+            sys.executable, "-m", "streamlit", "run", str(DASHBOARD),
             "--server.headless=true", f"--server.port={port}",
             "--browser.gatherUsageStats=false",
             "--theme.base=light", "--client.toolbarMode=minimal",

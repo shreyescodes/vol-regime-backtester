@@ -4,7 +4,7 @@
 
 [![CI](https://github.com/shreyescodes/vol-regime-backtester/actions/workflows/ci.yml/badge.svg)](https://github.com/shreyescodes/vol-regime-backtester/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
-![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![Coverage](https://img.shields.io/badge/coverage-96%25-brightgreen)
 ![Types](https://img.shields.io/badge/mypy-strict-blue)
 ![Lint](https://img.shields.io/badge/lint-ruff-261230)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -15,7 +15,7 @@ QuantVol answers one question carefully: **does conditioning a long-only strateg
 
 ## Results on real data (SPY, 2005-2024)
 
-5,032 daily bars including 2008, 2011, 2020 and 2022. Costs: 5 bps per unit of turnover. Signals are lagged one bar. Config: [`configs/spy.yaml`](configs/spy.yaml).
+5,032 daily bars including 2008, 2011, 2020 and 2022. Costs: 5 bps per unit of turnover. Signals are lagged one bar. Config: [`spy.yaml`](src/quantvol/assets/spy.yaml).
 
 | Strategy | CAGR | Sharpe | Sortino | Max drawdown | Calmar |
 |---|---:|---:|---:|---:|---:|
@@ -45,7 +45,7 @@ Sharpe is positive across the whole 4x4 window grid (0.31 to 0.62), so the resul
 ## Interactive dashboard
 
 ```bash
-quantvol dashboard        # or: streamlit run app/dashboard.py
+quantvol dashboard        # needs the app extra: pip install -e ".[app]"
 ```
 
 <p align="center">
@@ -69,7 +69,7 @@ The dashboard runs the same `run_pipeline` as the CLI. Switch between the bundle
 | **Configuration** | Everything tunable is a validated YAML field; unknown keys, bad ranges and inconsistent thresholds fail with a clear message. |
 | **Single orchestration path** | The CLI and the dashboard both call `quantvol.pipeline.run_pipeline`. |
 | **Typing and style** | `mypy --strict` on `src/`, `ruff` lint and format, `py.typed` marker. |
-| **Tests** | 59 tests: hand-computed P&L, golden metric values, [Hypothesis](https://hypothesis.readthedocs.io) properties (weights in `[0, 1]`, equity positive), look-ahead and walk-forward leakage checks, config validation, CLI smoke tests. 95% branch coverage with an 85% gate. |
+| **Tests** | 64 tests: hand-computed P&L, golden metric values, [Hypothesis](https://hypothesis.readthedocs.io) properties (weights in `[0, 1]`, equity positive), look-ahead and walk-forward leakage checks, config validation, CLI smoke tests, and Streamlit `AppTest` runs of the dashboard. 96% branch coverage (dashboard excluded from the metric, see `pyproject.toml`) with an 85% gate. |
 | **CI** | GitHub Actions: lint, type-check, tests on Python 3.10-3.12, wheel build with `twine check`, Docker build. |
 | **Reproducibility** | Seeded local RNG (global NumPy state untouched), bundled data sample, tests and CI never use the network. |
 
@@ -87,11 +87,13 @@ cd vol-regime-backtester
 python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -e ".[dev,app,data]"
 
-quantvol run --config configs/spy.yaml --out reports/spy   # full report: tables + figures
-quantvol sweep --config configs/spy.yaml                   # Sharpe grid over crossover windows
-quantvol walkforward --config configs/spy.yaml             # rolling out-of-sample test
+quantvol run --config spy --out reports/spy                 # full report: tables + figures
+quantvol sweep --config spy                                 # Sharpe grid over crossover windows
+quantvol walkforward --config spy                           # rolling out-of-sample test
 quantvol dashboard                                         # Streamlit UI
 ```
+
+`spy` and `default` are example configs that ship inside the package, along with the SPY data, so these commands also work after a plain `pip install`. Pass a file path instead to use your own config.
 
 <p align="center">
   <img src="docs/images/cli_run.png" width="75%" alt="quantvol run output">
@@ -106,9 +108,10 @@ from dataclasses import asdict
 
 from quantvol import Backtester, RegimeFilteredMovingAverageCrossover, detect_regimes, load_config
 from quantvol.data import load_csv_data
+from quantvol.resources import resource_path
 
-cfg = load_config("configs/spy.yaml")
-data = load_csv_data("data/sample/spy_2005_2024.csv")
+cfg = load_config(resource_path("spy.yaml"))
+data = load_csv_data(resource_path("spy_2005_2024.csv"))
 
 regimes = detect_regimes(data, **asdict(cfg.regime))
 strategy = RegimeFilteredMovingAverageCrossover(**asdict(cfg.crossover))
@@ -151,8 +154,9 @@ src/quantvol/
   reporting.py     figures
   pipeline.py      end-to-end orchestration and report writer
   cli.py           quantvol run | sweep | walkforward | dashboard
-app/dashboard.py   Streamlit UI
-configs/           spy.yaml (real data), default.yaml (synthetic)
+  dashboard.py     Streamlit UI
+  resources.py     locate the bundled configs and data
+  assets/          spy.yaml, default.yaml, SPY 2005-2024 sample CSV
 tests/             pytest + Hypothesis
 docs/              METHODOLOGY.md, ARCHITECTURE.md
 ```
