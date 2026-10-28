@@ -1,0 +1,40 @@
+# SPY daily bars 2005-2024 (split/dividend adjusted, via Yahoo Finance; bundled for offline use).
+data:
+  source: csv
+  csv_path: data/sample/spy_2005_2024.csv
+
+regime:
+  vol_window: 20
+  low_thresh: 0.10      # equity index: <10% annualized realized vol is calm
+  high_thresh: 0.20     # >20% marks stress (2008, 2011, 2020, 2022)
+  trading_days: 252
+
+backtest:
+  initial_capital: 100000
+  commission_rate: 0.0002   # ETF-like cost: 2 bps commission
+  slippage_rate: 0.0003     # 3 bps slippage
+  risk_free_rate: 0.02
+  execution_lag: 1
+  trading_days: 252
+
+crossover:
+  fast_window: 20
+  slow_window: 100
+  flat_regimes: [2]
+
+vol_target:
+  momentum_window: 100
+  vol_window: 20
+  target_vol: 0.10
+  trading_days: 252
+
+stress:
+  vol_spike_factor: 1.5
+  flash_crash_drop: -0.10
+  cost_multiplier: 5.0
+
+walk_forward:
+  train_days: 756     # 3y
+  test_days: 252      # 1y
+  fast_grid: [10, 20, 30, 50]
+  slow_grid: [60, 100, 150, 200]

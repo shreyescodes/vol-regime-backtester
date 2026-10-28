@@ -1,45 +1,41 @@
-# Contributing to QuantVol Backtester
+# Contributing
 
-Thank you for your interest in contributing to this project! This is a professional portfolio project designed to showcase systematic trading logic, vectorization, and software engineering best practices. 
+Contributions are welcome. Correctness comes first: in a backtester, a subtle look-ahead or cost
+error silently produces flattering numbers.
 
-## Development Setup
+## Setup
 
-We use a standard `Makefile` to simplify development. 
+```bash
+python -m venv .venv && source .venv/bin/activate     # Windows: .venv\Scripts\activate
+make install            # pip install -e ".[dev,app,data]" and pre-commit hooks
+```
 
-1. **Clone the repository:**
+## Workflow
+
+1. Branch from `main`: `git checkout -b feat/short-description`.
+2. Make the change with tests. Bug fixes should include a test that fails without the fix.
+3. Run everything CI runs:
    ```bash
-   git clone git@github.com:shreyescodes/vol-regime-backtester.git
-   cd vol-regime-backtester
+   make check          # ruff lint + format check, mypy --strict, pytest with coverage gate
    ```
+4. Open a pull request describing the change and its effect on results, if any.
 
-2. **Install dependencies:**
-   ```bash
-   make setup
-   ```
-   *This installs both the production requirements and the development tools (pytest, black, flake8, jupyter).*
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/)
+(`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`).
 
-## How to Contribute
+## Standards
 
-1. **Create a branch:**
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
+* **Causality.** A strategy's weight at bar *t* may use only data up to the close of *t*. New
+  strategies must be added to the parametrized list in `tests/test_lookahead.py`.
+* **Costs.** Do not bypass the engine's turnover costs when comparing against the benchmark.
+* **Types and style.** `mypy --strict` and `ruff` must pass; public functions need docstrings that
+  state assumptions (units, annualization, conventions).
+* **Determinism.** Use a local `numpy.random.Generator`; never seed global state. Tests and CI
+  must not use the network (mark such tests `@pytest.mark.network`).
+* **Config.** New tunables belong in `config.py` with validation, not as module constants.
 
-2. **Run tests before committing:**
-   Ensure you haven't broken the mathematical logic or lookahead protections.
-   ```bash
-   make test
-   ```
+## Reporting bugs
 
-3. **Format and Lint:**
-   This project strictly adheres to PEP-8 guidelines.
-   ```bash
-   black .
-   flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-   ```
-   *Note: Our GitHub Actions CI pipeline enforces linting and will reject PRs with syntax errors.*
-
-4. **Submit a Pull Request!**
-
-## Reporting Bugs
-If you find a lookahead bias or a bug in the strategy friction modeling, please open an issue with a reproducible CSV snippet and the exact `run_backtest.py` config parameters.
+Open an issue with a minimal data snippet, the YAML config, the observed and expected output,
+and the `quantvol --version`. Suspected look-ahead or cost-modelling errors are the highest
+priority.

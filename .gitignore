@@ -46,3 +46,15 @@ equity_curve.png
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Tooling caches and local outputs
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.hypothesis/
+.coverage
+coverage.xml
+htmlcov/
+reports/
+data/cache/
+.ipynb_checkpoints/
