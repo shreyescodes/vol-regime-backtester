@@ -52,7 +52,7 @@ quantvol = "quantvol.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-quantvol = ["py.typed"]
+quantvol = ["py.typed", "assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -62,7 +62,9 @@ markers = ["network: tests that need internet access (skipped by default)"]
 [tool.coverage.run]
 source = ["quantvol"]
 branch = true
-omit = ["src/quantvol/data/yahoo.py"]
+# yahoo.py needs the network. dashboard.py is exercised by tests/test_dashboard.py (Streamlit's
+# AppTest), but Streamlit's script runner is not traced by coverage, so it would read as 0%.
+omit = ["src/quantvol/data/yahoo.py", "src/quantvol/dashboard.py"]
 
 [tool.coverage.report]
 fail_under = 85
@@ -72,7 +74,7 @@ exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:", "raise NotImp
 [tool.ruff]
 line-length = 100
 target-version = "py310"
-src = ["src", "tests", "app", "scripts"]
+src = ["src", "tests", "scripts"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "C90", "SIM", "RUF"]

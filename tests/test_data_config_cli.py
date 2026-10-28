@@ -9,6 +9,7 @@ import pytest
 from quantvol.cli import main
 from quantvol.config import Config, ConfigError, config_from_dict, load_config
 from quantvol.data import DataError, generate_synthetic_data, load_csv_data, standardize_ohlcv
+from quantvol.resources import resource_path
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -53,14 +54,14 @@ def test_csv_loader_requires_close_and_positive_prices() -> None:
 
 
 def test_bundled_sample_loads() -> None:
-    df = load_csv_data(ROOT / "data" / "sample" / "spy_2005_2024.csv")
+    df = load_csv_data(resource_path("spy_2005_2024.csv"))
     assert len(df) > 5000 and df.index.is_monotonic_increasing
 
 
 def test_default_and_shipped_configs_validate() -> None:
     assert isinstance(Config(), Config)
     for name in ("default.yaml", "spy.yaml"):
-        assert isinstance(load_config(ROOT / "configs" / name), Config)
+        assert isinstance(load_config(resource_path(name)), Config)
 
 
 @pytest.mark.parametrize(
@@ -116,3 +117,21 @@ def test_cli_sweep_and_walkforward(tmp_path: Path, capsys: pytest.CaptureFixture
     assert main(["sweep", "-c", str(cfg)]) == 0
     assert main(["walkforward", "-c", str(cfg)]) == 0
     assert "OOS Sharpe" in capsys.readouterr().out
+
+
+def test_bundled_names_resolve() -> None:
+    from quantvol.resources import available, resolve_config_path, resolve_data_path
+
+    assert {"spy.yaml", "default.yaml", "spy_2005_2024.csv"} <= set(available())
+    assert resolve_config_path("spy").name == "spy.yaml"
+    assert resolve_data_path("builtin:spy_2005_2024.csv").is_file()
+    assert resolve_data_path("some/local.csv").as_posix() == "some/local.csv"
+    with pytest.raises(FileNotFoundError, match="not found"):
+        resolve_config_path("does-not-exist")
+    with pytest.raises(FileNotFoundError, match="no bundled resource"):
+        resolve_data_path("builtin:nope.csv")
+
+
+def test_cli_runs_with_bundled_config_name(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["sweep", "-c", "spy"]) == 0
+    assert "Sharpe ratio by" in capsys.readouterr().out
