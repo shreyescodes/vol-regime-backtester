@@ -1,0 +1,42 @@
+# Default QuantVol run: synthetic regime-switching data, both strategies, all analyses.
+data:
+  source: synthetic        # synthetic | csv | yahoo
+  n_days: 1500
+  seed: 101
+  start_date: "2018-01-01"
+
+regime:
+  vol_window: 20
+  low_thresh: 0.14
+  high_thresh: 0.25
+  trading_days: 252
+
+backtest:
+  initial_capital: 100000
+  commission_rate: 0.0010   # 10 bps per unit of turnover
+  slippage_rate: 0.0005     # 5 bps per unit of turnover
+  risk_free_rate: 0.04
+  execution_lag: 1          # signals act on the next bar; 0 is rejected (look-ahead)
+  trading_days: 252
+
+crossover:
+  fast_window: 20
+  slow_window: 50
+  flat_regimes: [2]         # go to cash in the high-volatility regime
+
+vol_target:
+  momentum_window: 50
+  vol_window: 20
+  target_vol: 0.12
+  trading_days: 252
+
+stress:
+  vol_spike_factor: 2.0
+  flash_crash_drop: -0.15
+  cost_multiplier: 5.0
+
+walk_forward:
+  train_days: 378
+  test_days: 126
+  fast_grid: [5, 10, 20, 30]
+  slow_grid: [40, 60, 90, 120]
